@@ -98,6 +98,11 @@ public class HouseServiceImpl implements IHouseService {
     @Value("${qiniu.cdn.prefix}")
     private String cdnPrefix;
 
+    /**
+     * 上传房源，只入数据库，审核状态通过后才可以入索引
+     * @param houseForm
+     * @return
+     */
     @Override
     public ServiceResult<HouseDTO> save(HouseForm houseForm) {
         HouseDetail detail = new HouseDetail();
@@ -144,6 +149,12 @@ public class HouseServiceImpl implements IHouseService {
         return new ServiceResult<HouseDTO>(true, null, houseDTO);
     }
 
+
+    /**
+     * 更新房源信息
+     * @param houseForm
+     * @return
+     */
     @Override
     @Transactional
     public ServiceResult update(HouseForm houseForm) {
@@ -175,6 +186,7 @@ public class HouseServiceImpl implements IHouseService {
         house.setLastUpdateTime(new Date());
         houseRepository.save(house);
 
+        //如果要修改的房源是上架状态，那么要修改索引
         if (house.getStatus() == HouseStatus.PASSES.getValue()) {
             searchService.index(house.getId());
         }
@@ -387,15 +399,19 @@ public class HouseServiceImpl implements IHouseService {
 
     @Override
     public ServiceMultiResult<HouseDTO> query(RentSearch rentSearch) {
+
+        //如果查询关键词不为空，那么就走ES索引
         if (rentSearch.getKeywords() != null && !rentSearch.getKeywords().isEmpty()) {
+            //从ES查询出检索到的房源ID
             ServiceMultiResult<Long> serviceResult = searchService.query(rentSearch);
+            //没有检索到任何房源
             if (serviceResult.getTotal() == 0) {
                 return new ServiceMultiResult<>(0, new ArrayList<>());
             }
-
+            //根据房源ID查询出所有的房源
             return new ServiceMultiResult<>(serviceResult.getTotal(), wrapperHouseResult(serviceResult.getResult()));
         }
-
+        //否则就走简单查询，即数据库查询
         return simpleQuery(rentSearch);
 
     }

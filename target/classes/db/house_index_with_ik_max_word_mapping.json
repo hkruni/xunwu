@@ -11,7 +11,7 @@
         },
         "title": {
           "type": "text",
-          "index": "analyzed",
+          "index": "true",
           "analyzer": "ik_max_word",
           "search_analyzer": "ik_max_word"
         },
@@ -58,25 +58,25 @@
         },
         "description": {
           "type": "text",
-          "index": "analyzed",
+          "index": "true",
           "analyzer": "ik_max_word",
           "search_analyzer": "ik_max_word"
         },
         "layoutDesc" : {
           "type": "text",
-          "index": "analyzed",
+          "index": "true",
           "analyzer": "ik_max_word",
           "search_analyzer": "ik_max_word"
         },
         "traffic": {
           "type": "text",
-          "index": "analyzed",
+          "index": "true",
           "analyzer": "ik_max_word",
           "search_analyzer": "ik_max_word"
         },
         "roundService": {
           "type": "text",
-          "index": "analyzed",
+          "index": "true",
           "analyzer": "ik_max_word",
           "search_analyzer": "ik_max_word"
         },

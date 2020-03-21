@@ -71,7 +71,7 @@ public class SearchServiceImpl implements ISearchService {
 
     private static final String INDEX_NAME = "xunwu";//索引名
 
-    private static final String INDEX_TYPE = "house";//索引类型
+    private static final String INDEX_TYPE = "house";// 索引类型
 
     private static final String INDEX_TOPIC = "house_build";//
 
@@ -127,30 +127,33 @@ public class SearchServiceImpl implements ISearchService {
         }
     }
 
+    /**
+     * 更新和创建索引
+     * @param message
+     */
     private void createOrUpdateIndex(HouseIndexMessage message) {
         Long houseId = message.getHouseId();
 
+        //从数据库查询要构建索引的房屋信息
         House house = houseRepository.findOne(houseId);
+
+        //如果数据库没有，那就向kafka再发送一个创建索引的消息
         if (house == null) {
             logger.error("Index house {} dose not exist!", houseId);
             this.index(houseId, message.getRetry() + 1);
             return;
         }
 
+        //如果数据库有，就要生成HouseIndexTemplate索引对象
         HouseIndexTemplate indexTemplate = new HouseIndexTemplate();
         modelMapper.map(house, indexTemplate);
-
         HouseDetail detail = houseDetailRepository.findByHouseId(houseId);
         if (detail == null) {
             // TODO 异常情况
         }
-
         modelMapper.map(detail, indexTemplate);
-
         SupportAddress city = supportAddressRepository.findByEnNameAndLevel(house.getCityEnName(), SupportAddress.Level.CITY.getValue());
-
         SupportAddress region = supportAddressRepository.findByEnNameAndLevel(house.getRegionEnName(), SupportAddress.Level.REGION.getValue());
-
         String address = city.getCnName() + region.getCnName() + house.getStreet() + house.getDistrict() + detail.getDetailAddress();
         ServiceResult<BaiduMapLocation> location = addressService.getBaiduMapLocation(city.getCnName(), address);
         if (!location.isSuccess()) {
@@ -166,6 +169,7 @@ public class SearchServiceImpl implements ISearchService {
             indexTemplate.setTags(tagStrings);
         }
 
+        //构建索引前先从索引里查询是否存在该houseID的房源
         SearchRequestBuilder requestBuilder = this.esClient.prepareSearch(INDEX_NAME).setTypes(INDEX_TYPE)
                 .setQuery(QueryBuilders.termQuery(HouseIndexKey.HOUSE_ID, houseId));
 
@@ -174,12 +178,12 @@ public class SearchServiceImpl implements ISearchService {
 
         boolean success;
         long totalHit = searchResponse.getHits().getTotalHits();
-        if (totalHit == 0) {
+        if (totalHit == 0) {//索引里没有就创建索引
             success = create(indexTemplate);
-        } else if (totalHit == 1) {
+        } else if (totalHit == 1) {//索引里只有一个那就渠道idupdate操作
             String esId = searchResponse.getHits().getAt(0).getId();
             success = update(esId, indexTemplate);
-        } else {
+        } else {//如果有多条，那就删除再插入
             success = deleteAndCreate(totalHit, indexTemplate);
         }
 
@@ -284,6 +288,12 @@ public class SearchServiceImpl implements ISearchService {
         }
     }
 
+    /**
+     * 使用delete_by_query，通过houseID进行查询删除
+     * @param totalHit
+     * @param indexTemplate
+     * @return
+     */
     private boolean deleteAndCreate(long totalHit, HouseIndexTemplate indexTemplate) {
         DeleteByQueryRequestBuilder builder = DeleteByQueryAction.INSTANCE
                 .newRequestBuilder(esClient)
@@ -295,7 +305,7 @@ public class SearchServiceImpl implements ISearchService {
         BulkByScrollResponse response = builder.get();
         long deleted = response.getDeleted();//删除掉的数据
         if (deleted != totalHit) {
-            //deleted：删除掉的数据  totalHit：查询出来的数据
+            //deleted：删除掉的数据  totalHit：查询出来的数据， 应该删除和实际删除不一致，警告一下
             logger.warn("Need delete {}, but {} was deleted!", totalHit, deleted);
             return false;
         } else {
@@ -308,6 +318,12 @@ public class SearchServiceImpl implements ISearchService {
         this.remove(houseId, 0);
     }
 
+
+    /**
+     * 根据关键词进行搜索
+     * @param rentSearch
+     * @return
+     */
     @Override
     public ServiceMultiResult<Long> query(RentSearch rentSearch) {
         BoolQueryBuilder boolQuery = QueryBuilders.boolQuery();
@@ -363,6 +379,7 @@ public class SearchServiceImpl implements ISearchService {
 //                        .boost(2.0f)
 //        );
 
+        //multi_match是在多个字段搜索同一个关键词
         boolQuery.must(
                 QueryBuilders.multiMatchQuery(rentSearch.getKeywords(),
                         HouseIndexKey.TITLE,

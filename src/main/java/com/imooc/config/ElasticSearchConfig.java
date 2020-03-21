@@ -29,7 +29,7 @@ public class ElasticSearchConfig {
     public TransportClient esClient() throws UnknownHostException {
         Settings settings = Settings.builder()
                 .put("cluster.name", this.esName)
-                //.put("client.transport.sniff", true)
+                .put("client.transport.sniff", true)//这样可以自动搜索集群的其他节点，不需要配置所有节点
                 .build();
 
         InetSocketTransportAddress master = new InetSocketTransportAddress(

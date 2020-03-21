@@ -8,6 +8,11 @@ import com.imooc.ApplicationTests;
 import com.imooc.service.ServiceMultiResult;
 import com.imooc.web.form.RentSearch;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 /**
  * Created by 瓦力.
  */
@@ -18,8 +23,14 @@ public class SearchServiceTests extends ApplicationTests {
 
     @Test
     public void testIndex() {
-        Long targetHouseId = 15L;
-        searchService.index(targetHouseId);
+        Long[] longs = {15L,16L,17L,18L,19L,20L,21L,22L,23L,24L,25L};
+        List<Long> ids = new ArrayList<Long>(Arrays.asList(longs));
+
+        for (Long targetHouseId : ids) {
+            searchService.index(targetHouseId);
+        }
+
+
     }
 
     @Test

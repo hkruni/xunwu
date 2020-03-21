@@ -1,5 +1,6 @@
 package com.imooc.web.controller;
 
+import com.imooc.service.search.ISearchService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -13,6 +14,10 @@ import com.imooc.base.LoginUserUtil;
 import com.imooc.service.ISmsService;
 import com.imooc.service.ServiceResult;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * Created by 瓦力.
  */
@@ -20,6 +25,10 @@ import com.imooc.service.ServiceResult;
 public class HomeController {
     @Autowired
     private ISmsService smsService;
+
+
+
+
 
     @GetMapping(value = {"/", "/index"})
     public String index(Model model) {

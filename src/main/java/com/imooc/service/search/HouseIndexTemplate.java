@@ -9,13 +9,14 @@ import java.util.List;
  * Created by 瓦力.
  */
 public class HouseIndexTemplate {
+
     private Long houseId;
 
-    private String title;
+    private String title;//标题
 
-    private int price;
+    private int price;//价格
 
-    private int area;
+    private int area;//地区
 
     private Date createTime;
 
@@ -25,7 +26,7 @@ public class HouseIndexTemplate {
 
     private String regionEnName;
 
-    private int direction;
+    private int direction;//朝向
 
     private int distanceToSubway;
 
@@ -33,17 +34,17 @@ public class HouseIndexTemplate {
 
     private String subwayStationName;
 
-    private String street;
+    private String street;  //街道地址
 
-    private String district;
+    private String district;  //小区名称
 
-    private String description;
+    private String description;  //房屋描述
 
-    private String layoutDesc;
+    private String layoutDesc; //房屋布局信息
 
-    private String traffic;
+    private String traffic;//交通信息
 
-    private String roundService;
+    private String roundService;//周边服务信息
 
     private int rentWay;
 
